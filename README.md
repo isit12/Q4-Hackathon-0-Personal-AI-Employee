@@ -1,411 +1,137 @@
-# Personal AI Employee — Platinum Tier ✅
+# AutoOps Agent — Platinum Tier
 
-> *Your life and business on autopilot. Cloud + Local, always-on, human-in-the-loop.*
+Autonomous personal and business automation system with cloud and local execution.
 
-A **Digital FTE (Full-Time Equivalent)** powered by Claude Code and Obsidian. The Platinum Tier adds a **Cloud Agent** that runs 24/7 on a VM, a **Git-synced vault** for Cloud/Local state sharing, and a **claim-by-move protocol** that prevents double-work — transforming the Gold local assistant into a true **always-on cloud employee**.
+---
+
+## Overview
+
+AutoOps Agent is a system designed to automate workflows, manage tasks, and coordinate actions across multiple data sources. It combines local and cloud execution with continuous processing, human approval steps, and task orchestration.
 
 ---
 
 ## Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│              PERSONAL AI EMPLOYEE (Gold Tier)                   │
-└─────────────────────────────────────────────────────────────────┘
+The system consists of multiple layers:
 
-External Sources (Gmail, LinkedIn, WhatsApp, Twitter/X, Facebook, Instagram, Files)
-         │
-         ▼
-  ┌──────────────────────────────────────────────────┐
-  │               PERCEPTION LAYER                   │
-  │  filesystem_watcher.py  (Bronze)                │
-  │  gmail_watcher.py       (Bronze/Silver)         │
-  │  linkedin_watcher.py    (Silver)                │
-  │  whatsapp_watcher.py    (Silver)                │
-  │  twitter_watcher.py     (Gold) ← NEW            │
-  │  facebook_watcher.py    (Gold) ← NEW            │
-  │  instagram_watcher.py   (Gold) ← NEW            │
-  └──────────────────────────────────────────────────┘
-         │ creates .md action files
-         ▼
-  AI_Employee_Vault/Needs_Action/
-         │
-         ▼ (Claude Code reads, Ralph Wiggum loops)
-  AI_Employee_Vault/Plans/          ← reasoning plans
-         │
-         ▼
-  AI_Employee_Vault/Pending_Approval/   ← human reviews (HITL)
-         │
-         ▼ (human moves to /Approved/)
-  ┌──────────────────────────────────────────────────┐
-  │              ORCHESTRATOR                        │
-  │  Watches /Approved/ → routes actions             │
-  │  • Email    → Email MCP Server                  │
-  │  • Social   → Social Media MCP Server ← NEW     │
-  │  • Odoo     → Odoo MCP Server ← NEW             │
-  │  Scheduled: Weekly Audit (Mon 7am) ← NEW        │
-  └──────────────────────────────────────────────────┘
-         │
-         ▼
-  External Actions (email, social posts, invoices)
-         │
-         ▼
-  AI_Employee_Vault/Done/ + Logs/<date>.json
-         │
-  ┌──────────────────────────────────────────────────┐
-  │          HEALTH & RECOVERY LAYER (Gold)          │
-  │  watchdog.py      — monitors/restarts processes  │
-  │  retry_handler.py — exponential backoff          │
-  │  ralph_wiggum_hook.py — autonomous loop (Stop hook) │
-  └──────────────────────────────────────────────────┘
-
-         ┌──────────────────────────────────────────────────┐
-         │         PLATINUM: CLOUD + LOCAL SPLIT            │
-         │                                                  │
-         │  CLOUD VM (24/7)        LOCAL (on-demand)        │
-         │  ──────────────         ──────────────           │
-         │  cloud_agent.py    ←──→ orchestrator.py          │
-         │  gmail-watcher          WhatsApp, payments       │
-         │  vault_sync.py   ←git→  vault_sync.py            │
-         │  Odoo (Docker+HTTPS)    Odoo MCP client          │
-         │                                                  │
-         │  Claim protocol: move Needs_Action/ →            │
-         │    In_Progress/cloud/ or In_Progress/local/      │
-         │  Signals/ → merge_signals.py → Dashboard.md      │
-         └──────────────────────────────────────────────────┘
-```
+- Input monitoring layer (external data sources)  
+- Task processing and planning  
+- Approval and execution pipeline  
+- Orchestration layer  
+- Monitoring and recovery system  
+- Cloud and local synchronization  
 
 ---
 
 ## Quick Start
 
-### 1. Install dependencies
+### Install dependencies
 
-```bash
-pip3 install watchdog python-dotenv playwright google-auth-oauthlib google-api-python-client --break-system-packages
-playwright install chromium
-```
+    pip3 install watchdog python-dotenv playwright google-auth google-api-client
 
-### 2. Configure `.env`
+### Configure environment
 
-```bash
-cp .env.example .env
-# Edit .env with your credentials
-```
+    cp .env.example .env
 
-### 3. Set up social media sessions (Gold Tier)
+### Initialize system
 
-```bash
-# Twitter/X
-python3 watchers/twitter_watcher.py --vault AI_Employee_Vault --setup
-
-# Facebook
-python3 watchers/facebook_watcher.py --vault AI_Employee_Vault --setup
-
-# Instagram
-python3 watchers/instagram_watcher.py --vault AI_Employee_Vault --setup
-```
-
-### 4. Configure Odoo (optional but recommended)
-
-```bash
-# Docker (easiest):
-docker run -d -p 8069:8069 --name odoo odoo:17
-
-# Then visit http://localhost:8069, create database, add to .env:
-# ODOO_URL=http://localhost:8069
-# ODOO_DB=your_db
-# ODOO_USERNAME=admin
-# ODOO_PASSWORD=your_password
-
-# Test Odoo MCP:
-python3 mcp_servers/odoo_server.py --test
-```
-
-### 5. Start everything with PM2
-
-```bash
-npm install -g pm2
-pm2 start scripts/pm2.config.js
-pm2 save && pm2 startup
-```
-
-### 6. Set up Gold Tier cron jobs
-
-```bash
-bash scripts/setup_cron_gold.sh
-```
+    python3 main.py
 
 ---
 
-## Agent Skills (Slash Commands)
+## Core Capabilities
 
-| Command | Description | Tier |
-|---------|-------------|------|
-| `/process-inbox` | Process all items in Needs_Action | Bronze |
-| `/update-dashboard` | Refresh Dashboard.md | Bronze |
-| `/morning-briefing` | Generate CEO briefing | Bronze |
-| `/start-watcher` | Start file system watcher | Bronze |
-| `/linkedin-post` | Draft LinkedIn post (HITL) | Silver |
-| `/approve-pending` | Review pending approvals | Silver |
-| `/run-orchestrator` | Start Master Orchestrator | Silver |
-| `/social-post` | Draft multi-platform social post (HITL) | **Gold** |
-| `/weekly-audit` | Generate weekly CEO business briefing | **Gold** |
-| `/ralph-loop` | Autonomous multi-step task loop | **Gold** |
-| `/odoo-query` | Query Odoo accounting/ERP | **Gold** |
-| `/sync-vault` | Git pull/push vault + report incoming drafts | **Platinum** |
-| `/cloud-status` | Cloud Agent activity + pending cloud drafts | **Platinum** |
+- Continuous monitoring of external inputs  
+- Task generation and processing  
+- Human-in-the-loop approval workflow  
+- Automated execution of approved tasks  
+- Logging and audit tracking  
+- Error recovery and retry handling  
+- Distributed execution (cloud + local)  
 
 ---
 
-## Component Reference
+## System Components
 
-### Watchers
+### Monitoring Layer
 
-| File | Platform | Interval |
-|------|----------|----------|
-| `watchers/filesystem_watcher.py` | File drops | Real-time |
-| `watchers/gmail_watcher.py` | Gmail | 2 min |
-| `watchers/linkedin_watcher.py` | LinkedIn | 5 min |
-| `watchers/whatsapp_watcher.py` | WhatsApp | 30 sec |
-| `watchers/twitter_watcher.py` | Twitter/X | 2 min |
-| `watchers/facebook_watcher.py` | Facebook | 3 min |
-| `watchers/instagram_watcher.py` | Instagram | 3 min |
+Responsible for detecting incoming data and triggering actions.
 
-### MCP Servers
+### Processing Layer
 
-| File | Tools | Notes |
-|------|-------|-------|
-| `mcp_servers/email_server.py` | send_email, draft_email, list_drafts | SMTP |
-| `mcp_servers/social_media_server.py` | post_to_twitter, post_to_facebook, post_to_instagram, get_social_summary | Playwright sessions |
-| `mcp_servers/odoo_server.py` | odoo_authenticate, get_invoices, create_invoice, get_partners, get_financial_summary | Odoo JSON-RPC; mock mode by default |
+Handles task creation, transformation, and planning.
 
-### Gold Tier Scripts
+### Orchestration Layer
 
-| File | Purpose |
-|------|---------|
-| `watchers/retry_handler.py` | Exponential backoff, circuit breaker, rate limiter |
-| `scripts/watchdog.py` | Process health monitor — monitors all watchers |
-| `scripts/ralph_wiggum_hook.py` | Stop hook — keeps Claude looping until work is done |
-| `scripts/weekly_audit.py` | Weekly business + accounting audit → CEO briefing |
-| `scripts/setup_cron_gold.sh` | Installs Gold Tier cron jobs |
+Routes approved tasks to execution modules.
 
-### Platinum Tier Scripts
+### Execution Layer
 
-| File | Purpose |
-|------|---------|
-| `scripts/cloud_agent.py` | Cloud Agent — email triage + social drafts (24/7 VM) |
-| `scripts/vault_sync.py` | Git vault sync daemon (pull/push, 5-min interval) |
-| `scripts/merge_signals.py` | Merge Cloud signals into Dashboard.md (local) |
-| `scripts/cloud_pm2.config.js` | PM2 config for cloud VM processes |
-| `scripts/setup_cloud.sh` | Bootstrap script for Ubuntu 22.04 cloud VM |
-| `scripts/odoo_cloud_setup.sh` | Odoo + Caddy HTTPS on cloud VM |
-| `scripts/odoo_docker_compose.yml` | Docker Compose for Odoo Community |
-| `scripts/setup_cron_platinum.sh` | Installs Platinum Tier cron jobs |
-| `scripts/demo_platinum.sh` | End-to-end Platinum demo script |
+Performs external actions such as messaging, posting, or data updates.
+
+### Recovery Layer
+
+Ensures stability via monitoring, retries, and automatic restarts.
 
 ---
 
-## Ralph Wiggum Loop
+## Task Flow
 
-The Ralph Wiggum pattern keeps Claude Code working autonomously until a task is complete:
-
-```
-Claude works → tries to exit → Stop hook fires → checks Needs_Action/ →
-  items remain? → block exit, re-inject prompt → Claude keeps working →
-  Needs_Action/ empty? → allow exit
-```
-
-Activate with `/ralph-loop` or manually:
-```bash
-python3 -c "
-import json
-from pathlib import Path
-Path('/tmp/ralph_wiggum_state.json').write_text(json.dumps({
-  'active': True, 'max_iterations': 10, 'iteration': 0,
-  'vault_path': 'AI_Employee_Vault',
-  'task_prompt': 'Process all items in /Needs_Action until empty.'
-}))
-"
-```
+1. Data is received from external sources  
+2. Tasks are generated  
+3. Tasks are processed and planned  
+4. Pending actions require approval  
+5. Approved actions are executed  
+6. Results are logged  
 
 ---
 
-## Odoo Accounting Integration
+## Automation Features
 
-The Odoo MCP server works in two modes:
-
-**Mock mode** (default, DRY_RUN=true): Returns sample data — no Odoo required. Perfect for demos.
-
-**Live mode**: Set in `.env`:
-```
-ODOO_URL=http://localhost:8069
-ODOO_DB=mydb
-ODOO_USERNAME=admin
-ODOO_PASSWORD=mypassword
-DRY_RUN=false
-```
-
-Odoo API reference: https://www.odoo.com/documentation/19.0/developer/reference/external_api.html
+- Scheduled task execution  
+- Batch processing  
+- Retry and backoff strategies  
+- Multi-step task handling  
 
 ---
 
-## Security
+## Distributed Mode
 
-| Rule | Detail |
-|------|--------|
-| No credentials in vault | Use `.env` only |
-| HITL for all external sends | Email, social, payments need approval |
-| Payments > $100 | Always manual approval |
-| Rate limits | 10 emails/hr, 3 social posts/hr |
-| Sessions never synced | `.gitignore` covers all session dirs |
-| Audit trail | Every action logged to `Logs/<date>.json` |
+Supports hybrid execution:
+
+- Cloud environment for continuous processing  
+- Local environment for manual and sensitive operations  
+
+Synchronization ensures consistent state between environments.
 
 ---
 
-## Tier Checklist
+## Command Interface
 
-### Bronze ✅
-- [x] Obsidian vault with Dashboard.md and Company_Handbook.md
-- [x] File system watcher
-- [x] Basic folder structure
-- [x] Agent Skills: /process-inbox, /update-dashboard, /morning-briefing, /start-watcher
-
-### Silver ✅
-- [x] Gmail watcher
-- [x] LinkedIn watcher + HITL poster
-- [x] WhatsApp watcher
-- [x] Email MCP server
-- [x] Master Orchestrator with scheduler
-- [x] PM2 config + cron setup
-- [x] Agent Skills: /linkedin-post, /approve-pending, /run-orchestrator
-
-### Gold ✅
-- [x] Twitter/X watcher + poster (Playwright)
-- [x] Facebook watcher + poster (Playwright)
-- [x] Instagram watcher (API note)
-- [x] Social Media MCP server
-- [x] Odoo Community MCP server (JSON-RPC, mock + live modes)
-- [x] Weekly Business & Accounting Audit + CEO Briefing
-- [x] Error recovery: retry_handler.py (exponential backoff, circuit breaker, rate limiter)
-- [x] Process watchdog: watchdog.py (auto-restart, health logging)
-- [x] Ralph Wiggum loop (Stop hook for autonomous multi-step completion)
-- [x] Multiple MCP servers (Email + Social Media + Odoo)
-- [x] Comprehensive audit logging (all events to Logs/<date>.json)
-- [x] Agent Skills: /social-post, /weekly-audit, /ralph-loop, /odoo-query
-- [x] CLAUDE.md + README.md updated to Gold Tier
-
-### Platinum ✅
-- [x] `scripts/cloud_agent.py` — 24/7 Cloud Agent (email triage + social drafts)
-- [x] `scripts/vault_sync.py` — Git-based vault sync daemon (pull/push)
-- [x] `scripts/merge_signals.py` — Cloud signal merger → Dashboard.md
-- [x] `scripts/cloud_pm2.config.js` — PM2 config for cloud VM
-- [x] `scripts/setup_cloud.sh` — Ubuntu 22.04 bootstrap script
-- [x] `scripts/odoo_cloud_setup.sh` — Odoo + Caddy HTTPS on cloud VM
-- [x] `scripts/odoo_docker_compose.yml` — Docker Compose for Odoo Community
-- [x] `scripts/setup_cron_platinum.sh` — Platinum cron jobs
-- [x] `scripts/demo_platinum.sh` — End-to-end demo automation
-- [x] `AI_Employee_Vault/In_Progress/` — Claim-by-move directories (cloud/ + local/)
-- [x] `AI_Employee_Vault/Signals/` — Cloud→Local status signal channel
-- [x] `orchestrator.py` updated — AGENT_MODE, claim_task(), merge_signals integration, CLOUD_DRAFT_* routing
-- [x] `scripts/pm2.config.js` updated — vault-sync entry added
-- [x] `.env.example` updated — Platinum env vars
-- [x] `.mcp.json` updated — vault_sync MCP entry
-- [x] Agent Skills: /sync-vault, /cloud-status
-- [x] CLAUDE.md + README.md updated to Platinum Tier
+The system supports command-based interaction for triggering workflows and operations.
 
 ---
 
-## Platinum Tier: Cloud Deployment Guide
+## Development Guide
 
-### Prerequisites
-- Ubuntu 22.04 VM (Oracle Cloud Free Tier works great)
-- Domain name with DNS A record pointing to VM (for Odoo HTTPS)
-- Git repository (GitHub/GitLab) for vault sync
-- SSH key pair for VM access
+Install dependencies:
 
-### Step 1: Clone and bootstrap the cloud VM
+    pip install -r requirements.txt
 
-```bash
-# SSH into your cloud VM
-ssh ubuntu@<your-vm-ip>
+Run tests:
 
-# Clone your repo
-git clone git@github.com:yourusername/ai-employee.git ~/ai-employee
-cd ~/ai-employee
-
-# Run bootstrap (installs Python, Node, PM2, Docker, Playwright, Caddy)
-bash scripts/setup_cloud.sh
-```
-
-### Step 2: Configure secrets
-
-```bash
-nano .env
-# Set at minimum:
-#   AGENT_MODE=cloud
-#   GIT_REMOTE_URL=git@github.com:yourusername/ai-employee.git
-#   GMAIL_CREDENTIALS_PATH=watchers/credentials.json
-#   SMTP_USER=your@email.com
-#   SMTP_PASSWORD=your-app-password
-```
-
-### Step 3: Set up Gmail OAuth on the VM
-
-```bash
-# Copy credentials.json from your local machine
-scp watchers/credentials.json ubuntu@<vm-ip>:~/ai-employee/watchers/
-
-# Authorize (opens URL for browser auth — copy/paste into your browser)
-python3 watchers/gmail_watcher.py --vault AI_Employee_Vault --setup
-```
-
-### Step 4: Configure Git remote and vault sync
-
-```bash
-# Ensure remote is set
-git remote add origin git@github.com:yourusername/ai-employee.git
-
-# Test sync
-python3 scripts/vault_sync.py --vault AI_Employee_Vault --once
-```
-
-### Step 5: Start cloud processes
-
-```bash
-pm2 start scripts/cloud_pm2.config.js
-pm2 save
-
-# Check status
-pm2 status
-pm2 logs cloud-agent
-```
-
-### Step 6: Set up Odoo (optional)
-
-```bash
-ODOO_DOMAIN=odoo.yourdomain.com bash scripts/odoo_cloud_setup.sh
-```
-
-### Step 7: On your local machine — enable vault sync
-
-```bash
-# Add to local pm2
-pm2 start scripts/pm2.config.js
-
-# Or run vault sync manually
-python3 scripts/vault_sync.py --vault AI_Employee_Vault --interval 300
-
-# Check cloud status
-/cloud-status   (in Claude Code)
-```
-
-### Step 8: Run the demo
-
-```bash
-bash scripts/demo_platinum.sh
-```
+    pytest
 
 ---
 
-*Built with Claude Code · Obsidian · Python · Playwright · PM2 · Docker · Caddy*
+## Notes
+
+- Do not store credentials in source files  
+- Use environment variables for sensitive data  
+- Ensure secure handling of external integrations  
+
+---
+
+## License
+
+MIT

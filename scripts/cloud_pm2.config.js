@@ -1,23 +1,4 @@
-/**
- * cloud_pm2.config.js — PM2 Process Config for Cloud VM (Platinum Tier)
- *
- * Cloud-only processes:
- *   - cloud-agent     → scripts/cloud_agent.py (email triage + social drafts)
- *   - gmail-watcher   → watchers/gmail_watcher.py (inbound email monitor)
- *   - vault-sync      → scripts/vault_sync.py (git pull/push daemon)
- *   - watchdog-cloud  → scripts/watchdog.py (health monitor for cloud processes)
- *
- * Setup:
- *   npm install -g pm2
- *   pm2 start scripts/cloud_pm2.config.js
- *   pm2 save && pm2 startup
- *
- * Useful commands:
- *   pm2 status                  — List cloud processes
- *   pm2 logs cloud-agent        — Tail cloud agent logs
- *   pm2 logs vault-sync         — Tail vault sync logs
- *   pm2 restart cloud-agent     — Restart one process
- */
+
 
 const path = require("path");
 const ROOT = path.resolve(__dirname, "..");
@@ -30,7 +11,7 @@ function envOrDefault(key, def) {
 
 module.exports = {
   apps: [
-    // ── Cloud Agent (Platinum Tier core) ─────────────────────────────────────
+
     {
       name: "cloud-agent",
       script: PYTHON,
@@ -52,7 +33,6 @@ module.exports = {
       out_file: path.join(ROOT, "logs", "cloud-agent-out.log"),
     },
 
-    // ── Gmail Watcher ─────────────────────────────────────────────────────────
     {
       name: "gmail-watcher",
       script: PYTHON,
@@ -81,7 +61,6 @@ module.exports = {
       out_file: path.join(ROOT, "logs", "gmail-watcher-out.log"),
     },
 
-    // ── Vault Sync (git pull/push daemon) ─────────────────────────────────────
     {
       name: "vault-sync",
       script: PYTHON,
@@ -103,7 +82,6 @@ module.exports = {
       out_file: path.join(ROOT, "logs", "vault-sync-out.log"),
     },
 
-    // ── Watchdog (Cloud) ──────────────────────────────────────────────────────
     {
       name: "watchdog-cloud",
       script: PYTHON,
